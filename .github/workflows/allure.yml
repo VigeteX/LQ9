@@ -20,6 +20,10 @@ jobs:
         with:
           python-version: '3.11'
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
       - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -38,10 +42,10 @@ jobs:
           mkdir -p allure-results
           pytest -n auto --alluredir=allure-results --browser_name=${{ matrix.browser }}
 
-      - name: Upload result
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: results-${{ matrix.browser }}
+          name: allure-results-${{ matrix.browser }}
           path: allure-results
 
   generate-report:
@@ -51,19 +55,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: results-*
+          pattern: allure-results-*
           merge-multiple: true
           path: allure-results
 
       - run: npm install -g allure-commandline --save-dev
-
-      - name: Debug - list downloaded files
-        run: |
-          echo "Downloaded files:"
-          ls -R allure-results
 
       - name: Generate Allure report
         run: |
@@ -75,10 +78,10 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
 
-      - name: Slack Notification
+      - name: Send Slack notification
         if: always()
         run: |
-          STATUS=${{ job.status }}
+          STATUS="${{ needs.test.result }}"
           if [ "$STATUS" = "success" ]; then
             COLOR="#36a64f"
             MESSAGE="✅ All tests passed"
