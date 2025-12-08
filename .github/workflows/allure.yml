@@ -39,10 +39,23 @@ jobs:
           BASE_URL: ${{ secrets.BASE_URL }}
           TEST_EMAIL_PREFIX: ${{ secrets.TEST_EMAIL_PREFIX }}
         run: |
-          pytest -n auto --alluredir=allure-results --browser_name=${{ matrix.browser }}
+          pytest -n auto --alluredir=allure-results/${{ matrix.browser }} --browser_name=${{ matrix.browser }}
+  
+    generate-report:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Generate Allure report
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline --save-dev
+
+      - name: Merge Allure results and generate report
         run: |
+          mkdir -p allure-results
+          cp -r allure-results/chromium/* allure-results/ || true
+          cp -r allure-results/firefox/* allure-results/ || true
           allure generate allure-results --clean -o allure-report
 
       - name: Deploy to GitHub Pages
@@ -50,7 +63,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
-          force_orphan: true
 
       - name: Send Slack notification
         if: always()
@@ -70,7 +82,7 @@ jobs:
                 {
                   \"color\": \"$COLOR\",
                   \"title\": \"$MESSAGE\",
-                  \"text\": \"GitHub Pages report: "https://vigetex.github.io/LQ9/"
-              ]
+                  \"text\": \"GitHub Pages report: https://https://vigetex.github.io/LQ9/\"
+              }
             }" \
             ${{ secrets.SLACK_WEBHOOK_URL }}
