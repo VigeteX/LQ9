@@ -41,7 +41,7 @@ jobs:
         run: |
           pytest -n auto --alluredir=allure-results/${{ matrix.browser }} --browser_name=${{ matrix.browser }}
   
-    generate-report:
+  generate-report:
     runs-on: ubuntu-latest
     needs: test
     steps:
