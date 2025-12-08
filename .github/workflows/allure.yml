@@ -39,14 +39,14 @@ jobs:
           BASE_URL: ${{ secrets.BASE_URL }}
           TEST_EMAIL_PREFIX: ${{ secrets.TEST_EMAIL_PREFIX }}
         run: |
-          mkdir -p allure-results
-          pytest -n auto --alluredir=allure-results --browser_name=${{ matrix.browser }}
+          mkdir -p allure-results/${{ matrix.browser }}
+          pytest -n auto --alluredir=allure-results/${{ matrix.browser }} --browser_name=${{ matrix.browser }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-${{ matrix.browser }}
-          path: allure-results
+          path: allure-results/${{ matrix.browser }}
 
   generate-report:
     runs-on: ubuntu-latest
